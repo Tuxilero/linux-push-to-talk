@@ -20,19 +20,22 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 import logging
 from multiprocessing import Process, Queue
 from optparse import OptionParser
 import os
 import os.path
 
-from gi.repository import GObject, Gio, GLib
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import GObject, Gtk, Gdk, Gio, GLib
 import gtk
 
 from interfaces import SkypeInterface, PulseAudioInterface
 from key_monitor import KeyMonitor
 
-class PushToTalk(gtk.StatusIcon):
+class PushToTalk(Gtk.StatusIcon):
     INTERVAL = 100
     INTERFACES = [
             PulseAudioInterface,
@@ -42,8 +45,8 @@ class PushToTalk(gtk.StatusIcon):
     def __init__(self):
         self.logger = logging.getLogger('push_to_talk_app')
 
-        gtk.StatusIcon.__init__(self)
-
+        Gtk.StatusIcon.__init__(self)
+        self.set_tooltip_text('Test of tooltip')
         self.configure_unity()
 
         saved_interface = self.get_saved_interface()
@@ -123,21 +126,21 @@ class PushToTalk(gtk.StatusIcon):
                 os.path.dirname(__file__),
                 'icons/mute.png'
             ))
-        self.set_tooltip('Microphone Muted')
+        self.set_tooltip_text('Microphone Muted')
 
     def set_ui_talk(self):
         self.set_from_file(os.path.join(
                 os.path.dirname(__file__),
                 'icons/talk.png'
             ))
-        self.set_tooltip('Microphone Active')
+        self.set_tooltip_text('Microphone Active')
 
     def set_ui_setkey(self):
         self.set_from_file(os.path.join(
                 os.path.dirname(__file__),
                 'icons/setkey.png'
             ))
-        self.set_tooltip('Please press a key...')
+        self.set_tooltip_text('Please press a key...')
 
     def reset_process(self):
         self.logger.debug("Killing process...")
@@ -206,17 +209,17 @@ class PushToTalk(gtk.StatusIcon):
                                 self.change_interface, 
                         ),)
 
-        action_group = gtk.ActionGroup('Actions')
+        action_group = Gtk.ActionGroup('Actions')
         action_group.add_actions(verbs)
 
-        self.manager = gtk.UIManager()
+        self.manager = Gtk.UIManager()
         self.manager.insert_action_group(action_group, 0)
         self.manager.add_ui_from_string(self.menu_xml)
         self.menu = self.manager.get_widget('/Menubar/Menu/SetKey').props.parent
         self.connect('popup-menu', self.on_popup_menu)
 
     def on_popup_menu(self, status, button, time):
-        self.menu.popup(None, None, None, button, time)
+        self.menu.popup(None, None, None, None, button, time)
 
     @property
     def menu_xml(self):
@@ -249,4 +252,4 @@ def run_from_cmdline():
         )
 
     PushToTalk()
-    gtk.main()
+    Gtk.main()
