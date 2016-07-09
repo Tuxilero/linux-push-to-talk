@@ -114,7 +114,7 @@ class KeyMonitor(object):
                     'ext_requests': (0, 0, 0, 0),
                     'ext_replies': (0, 0, 0, 0),
                     'delivered_events': (0, 0),
-                    'device_events': (X.KeyPress, X.KeyRelease, ),
+                    'device_events': (X.ButtonPress, X.ButtonRelease, X.KeyPress, X.KeyRelease, ),
                     'errors': (0, 0),
                     'client_started': False,
                     'client_died': False,
@@ -134,13 +134,14 @@ class KeyMonitor(object):
         data = reply.data
         while len(data):
             event, data = rq.EventField(None).parse_binary_value(data, self.record_dpy.display, None, None)
-            if event.type == X.KeyPress:
+            if event.type == X.ButtonPress || event.type == X.KeyPress:
                 self.keypressevent(event, KeyMonitor.PRESS)
-            elif event.type == X.KeyRelease:
+            elif event.type == X.ButtonRelease || event.type == X.KeyRelease:
                 self.keypressevent(event, KeyMonitor.RELEASE)
 
     def keypressevent(self, event, action):
         keysym = self.local_dpy.keycode_to_keysym(event.detail, 0)
+        keysym = event.detail
         if not self.return_pipe.empty():
             self.logger.debug("Key info %s" % keysym)
             data_object = self.return_pipe.get_nowait()
